@@ -42,9 +42,15 @@ export class SlotMachine {
 
   _getLines() {
     const lines = [];
+    // 3 lignes horizontales
     for (let r = 0; r < this.rows; r++) {
       lines.push([[0, r], [1, r], [2, r]]);
     }
+    // 3 lignes verticales
+    for (let c = 0; c < this.cols; c++) {
+      lines.push([[c, 0], [c, 1], [c, 2]]);
+    }
+    // 2 diagonales
     lines.push([[0, 0], [1, 1], [2, 2]]);
     lines.push([[0, 2], [1, 1], [2, 0]]);
     return lines;
