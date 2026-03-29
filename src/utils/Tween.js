@@ -17,13 +17,17 @@ export function easeInOut(t) {
 export class Tween {
   constructor(obj, target, duration, easing = easeOut) {
     this.obj = obj;
-    this.start = { ...obj };
     this.target = target;
     this.duration = duration;
     this.easing = easing;
     this.elapsed = 0;
     this.done = false;
     this.onComplete = null;
+    // Explicitly read each key instead of spreading (fixes PixiJS ObservablePoint)
+    this.start = {};
+    for (const key of Object.keys(target)) {
+      this.start[key] = obj[key];
+    }
   }
 
   update(dt) {
