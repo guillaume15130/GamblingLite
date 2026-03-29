@@ -1,0 +1,45 @@
+export const GameState = {
+  coins: 100,
+  startCoins: 100,
+  betAmount: 10,
+  spinsLeft: 30,
+  floor: 1,
+  maxFloor: 5,
+
+  meta: {
+    totalRuns: 0,
+    bestFloor: 0,
+    metaCoins: 0,
+    unlockedRelics: [],
+  },
+
+  activeRelics: [],
+
+  getMultiplier() {
+    return this.activeRelics.reduce((m, r) => m * (r.multiplier || 1), 1);
+  },
+
+  addRelic(relic) {
+    this.activeRelics.push(relic);
+  },
+
+  resetRun() {
+    this.coins = 100;
+    this.betAmount = 10;
+    this.spinsLeft = 30;
+    this.floor = 1;
+    this.activeRelics = [];
+    this.meta.totalRuns++;
+  },
+
+  saveMeta() {
+    localStorage.setItem('gamblinglite_meta', JSON.stringify(this.meta));
+  },
+
+  loadMeta() {
+    const saved = localStorage.getItem('gamblinglite_meta');
+    if (saved) {
+      this.meta = { ...this.meta, ...JSON.parse(saved) };
+    }
+  },
+};
