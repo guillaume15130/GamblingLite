@@ -33,9 +33,9 @@ export class GameManager {
       return;
     }
 
-    this._setScene(new RelicChoiceScene(this.app, (relic) => {
+    this._setScene(new RelicChoiceScene(this.app, () => {
       GameState.floor++;
-      GameState.spinsLeft += 20;
+      GameState.resetFloor(); // fresh 100 coins + 25 spins each floor
       GameState.activeRelics.forEach(r => {
         if (r.onFloorStart) r.onFloorStart(GameState);
       });

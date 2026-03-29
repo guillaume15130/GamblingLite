@@ -6,19 +6,21 @@ import { Tween } from '../utils/Tween.js';
 const CELL = 110;
 const COLS = 3;
 const ROWS = 3;
-// Centered in the 430px-wide frame (starts at x=25)
 const REEL_X = [55, 185, 315];
 const REEL_Y_START = 215;
+const BAR_X = 30;
+const BAR_W = 420;
+const BAR_Y = 578;
+const BAR_H = 8;
 
-// Symbol labels guaranteed to render on all devices
 const SYMBOL_LABELS = {
-  cherry:  { label: '♥', textColor: 0xffffff },
-  lemon:   { label: '♦', textColor: 0xffffff },
-  orange:  { label: '●', textColor: 0xffffff },
-  grape:   { label: '♣', textColor: 0xffffff },
-  bell:    { label: '★', textColor: 0xffffff },
-  star:    { label: '✦', textColor: 0xffffff },
-  seven:   { label: '7', textColor: 0xffffff },
+  cherry:  { label: '♥' },
+  lemon:   { label: '♦' },
+  orange:  { label: '●' },
+  grape:   { label: '♣' },
+  bell:    { label: '★' },
+  star:    { label: '✦' },
+  seven:   { label: '7' },
 };
 
 export class SlotScene extends Container {
@@ -30,7 +32,7 @@ export class SlotScene extends Container {
     this.machine = new SlotMachine(ROWS, COLS);
     this.spinning = false;
     this.tweens = [];
-    this.symbolCells = []; // [col][row] = Container
+    this.symbolCells = [];
     this.lastResult = null;
 
     this._buildBackground();
@@ -48,14 +50,12 @@ export class SlotScene extends Container {
     const fx = 25, fy = 205, fw = 430, fh = 340;
     bg.roundRect(fx, fy, fw, fh, 18).fill(0x16213e);
     bg.roundRect(fx + 3, fy + 3, fw - 6, fh - 6, 15).stroke({ width: 3, color: 0x4a9eff });
-    // Win line indicator (middle row)
     bg.rect(30, REEL_Y_START + CELL + 8, 420, 2).fill({ color: 0xffd700, alpha: 0.4 });
     this.addChild(bg);
   }
 
   _buildReels() {
     this.symbolCells = [];
-
     for (let c = 0; c < COLS; c++) {
       const reelBg = new Graphics();
       reelBg.roundRect(REEL_X[c] - 6, REEL_Y_START - 6, CELL + 12, ROWS * CELL + 12, 10).fill(0x0d0d1a);
@@ -78,43 +78,28 @@ export class SlotScene extends Container {
     }
   }
 
-  _makeCell(symbol = null) {
+  _makeCell() {
     const cell = new Container();
-
     const bg = new Graphics();
     cell.addChild(bg);
-
-    const lbl = new Text({ text: '', style: new TextStyle({
-      fontSize: 46,
-      fontWeight: 'bold',
-      fontFamily: 'monospace',
-      fill: 0xffffff,
-    })});
+    const lbl = new Text({ text: '', style: new TextStyle({ fontSize: 40, fontWeight: 'bold', fontFamily: 'monospace', fill: 0xffffff }) });
     lbl.anchor.set(0.5);
     cell.addChild(lbl);
-
-    if (symbol) this._applySymbol(cell, symbol);
-    else this._applyPlaceholder(cell);
-
+    this._applyPlaceholder(cell);
     return cell;
   }
 
   _applySymbol(cell, symbol) {
     const bg = cell.children[0];
     const lbl = cell.children[1];
-    const r = 42;
     bg.clear();
-    // Outer glow ring
-    bg.circle(0, 0, r).fill(symbol.color);
-    // Inner darker fill
-    bg.circle(0, 0, r - 5).fill(0x0d0d1a);
-    // Small colored dot in center
-    bg.circle(0, 0, r - 18).fill({ color: symbol.color, alpha: 0.3 });
-
-    const info = SYMBOL_LABELS[symbol.id] || { label: '?', textColor: 0xffffff };
+    bg.circle(0, 0, 42).fill(symbol.color);
+    bg.circle(0, 0, 37).fill(0x0d0d1a);
+    bg.circle(0, 0, 24).fill({ color: symbol.color, alpha: 0.25 });
+    const info = SYMBOL_LABELS[symbol.id] || { label: '?' };
     lbl.text = info.label;
     lbl.style.fill = symbol.color;
-    lbl.style.fontSize = symbol.id === 'seven' ? 52 : 40;
+    lbl.style.fontSize = symbol.id === 'seven' ? 50 : 38;
   }
 
   _applyPlaceholder(cell) {
@@ -124,63 +109,89 @@ export class SlotScene extends Container {
     bg.circle(0, 0, 42).fill(0x1a1a3e);
     bg.circle(0, 0, 37).fill(0x0d0d1a);
     lbl.text = '?';
-    lbl.style.fill = 0x333366;
+    lbl.style.fill = 0x2a2a5a;
   }
 
   _buildHUD() {
+    // Title
     const title = new Text({ text: '🎰 GAMBLINGLITE', style: new TextStyle({ fontSize: 28, fill: 0xffd700, fontWeight: 'bold', fontFamily: 'monospace' }) });
     title.anchor.set(0.5);
-    title.x = 240;
-    title.y = 40;
+    title.x = 240; title.y = 40;
     this.addChild(title);
 
-    this.coinsText = new Text({ text: '', style: new TextStyle({ fontSize: 22, fill: 0x2ecc71, fontFamily: 'monospace', fontWeight: 'bold' }) });
-    this.coinsText.anchor.set(0, 0.5);
-    this.coinsText.x = 30;
-    this.coinsText.y = 565;
-    this.addChild(this.coinsText);
-
-    this.spinsText = new Text({ text: '', style: new TextStyle({ fontSize: 18, fill: 0x95a5a6, fontFamily: 'monospace' }) });
-    this.spinsText.anchor.set(1, 0.5);
-    this.spinsText.x = 450;
-    this.spinsText.y = 565;
-    this.addChild(this.spinsText);
-
+    // Floor
     this.floorText = new Text({ text: '', style: new TextStyle({ fontSize: 16, fill: 0x4a9eff, fontFamily: 'monospace' }) });
     this.floorText.anchor.set(0.5, 0.5);
-    this.floorText.x = 240;
-    this.floorText.y = 188;
+    this.floorText.x = 240; this.floorText.y = 188;
     this.addChild(this.floorText);
 
+    // Win message
     this.winText = new Text({ text: '', style: new TextStyle({ fontSize: 32, fill: 0xffd700, fontWeight: 'bold', fontFamily: 'monospace', align: 'center' }) });
     this.winText.anchor.set(0.5);
-    this.winText.x = 240;
-    this.winText.y = 158;
+    this.winText.x = 240; this.winText.y = 158;
     this.addChild(this.winText);
 
+    // Coins / objective
+    this.coinsText = new Text({ text: '', style: new TextStyle({ fontSize: 20, fill: 0x2ecc71, fontFamily: 'monospace', fontWeight: 'bold' }) });
+    this.coinsText.anchor.set(0, 0.5);
+    this.coinsText.x = 30; this.coinsText.y = 562;
+    this.addChild(this.coinsText);
+
+    // Spins
+    this.spinsText = new Text({ text: '', style: new TextStyle({ fontSize: 18, fill: 0x95a5a6, fontFamily: 'monospace' }) });
+    this.spinsText.anchor.set(1, 0.5);
+    this.spinsText.x = 450; this.spinsText.y = 562;
+    this.addChild(this.spinsText);
+
+    // Progress bar background
+    const barBg = new Graphics();
+    barBg.roundRect(BAR_X, BAR_Y, BAR_W, BAR_H, 4).fill(0x1a1a3e);
+    this.addChild(barBg);
+
+    // Progress bar fill (dynamic)
+    this.progressBar = new Graphics();
+    this.addChild(this.progressBar);
+
+    // Objective label
+    this.objectiveText = new Text({ text: '', style: new TextStyle({ fontSize: 13, fill: 0xffd700, fontFamily: 'monospace' }) });
+    this.objectiveText.anchor.set(1, 0);
+    this.objectiveText.x = 450; this.objectiveText.y = 580;
+    this.addChild(this.objectiveText);
+
+    // Bet
     const betLabel = new Text({ text: 'MISE :', style: new TextStyle({ fontSize: 16, fill: 0x7f8c8d, fontFamily: 'monospace' }) });
-    betLabel.x = 30;
-    betLabel.y = 638;
+    betLabel.x = 30; betLabel.y = 640;
     this.addChild(betLabel);
 
     this.betText = new Text({ text: '', style: new TextStyle({ fontSize: 22, fill: 0xe67e22, fontFamily: 'monospace', fontWeight: 'bold' }) });
-    this.betText.x = 105;
-    this.betText.y = 634;
+    this.betText.x = 105; this.betText.y = 636;
     this.addChild(this.betText);
 
+    // Relics
     this.relicContainer = new Container();
-    this.relicContainer.x = 30;
-    this.relicContainer.y = 668;
+    this.relicContainer.x = 30; this.relicContainer.y = 670;
     this.addChild(this.relicContainer);
 
     this._refreshHUD();
   }
 
   _refreshHUD() {
-    this.coinsText.text = `💰 ${GameState.coins}`;
+    const target = GameState.getFloorTarget();
+    const coins = GameState.coins;
+
+    this.coinsText.text = `💰 ${coins} / ${target}`;
     this.spinsText.text = `Spins: ${GameState.spinsLeft}`;
     this.floorText.text = `Étage ${GameState.floor} / ${GameState.maxFloor}`;
     this.betText.text = `${GameState.betAmount}`;
+    this.objectiveText.text = `🎯 OBJECTIF : ${target}`;
+
+    // Progress bar
+    const progress = Math.min(coins / target, 1);
+    const fillW = Math.max(4, Math.floor(BAR_W * progress));
+    const color = progress >= 0.8 ? 0xffd700 : progress >= 0.5 ? 0x2ecc71 : 0x4a9eff;
+    this.progressBar.clear();
+    this.progressBar.roundRect(BAR_X, BAR_Y, fillW, BAR_H, 4).fill(color);
+
     this._refreshRelics();
   }
 
@@ -195,8 +206,7 @@ export class SlotScene extends Container {
 
   _buildSpinButton() {
     this.spinBtn = new Container();
-    this.spinBtn.x = 140;
-    this.spinBtn.y = 725;
+    this.spinBtn.x = 140; this.spinBtn.y = 725;
 
     const bg = new Graphics();
     bg.roundRect(0, 0, 200, 55, 28).fill(0x4a9eff);
@@ -204,15 +214,14 @@ export class SlotScene extends Container {
 
     const label = new Text({ text: 'SPIN !', style: new TextStyle({ fontSize: 26, fill: 0xffffff, fontWeight: 'bold', fontFamily: 'monospace' }) });
     label.anchor.set(0.5);
-    label.x = 100;
-    label.y = 27;
+    label.x = 100; label.y = 27;
     this.spinBtn.addChild(label);
 
     this.spinBtn.eventMode = 'static';
     this.spinBtn.cursor = 'pointer';
     this.spinBtn.on('pointerdown', () => this._onSpin());
     this.spinBtn.on('pointerover', () => { bg.clear(); bg.roundRect(0, 0, 200, 55, 28).fill(0x5aaeff); });
-    this.spinBtn.on('pointerout', () => { bg.clear(); bg.roundRect(0, 0, 200, 55, 28).fill(0x4a9eff); });
+    this.spinBtn.on('pointerout',  () => { bg.clear(); bg.roundRect(0, 0, 200, 55, 28).fill(0x4a9eff); });
     this.addChild(this.spinBtn);
   }
 
@@ -220,8 +229,7 @@ export class SlotScene extends Container {
     const bets = [5, 10, 25, 50];
     bets.forEach((val, i) => {
       const btn = new Container();
-      btn.x = 30 + i * 108;
-      btn.y = 595;
+      btn.x = 30 + i * 108; btn.y = 600;
 
       const bg = new Graphics();
       bg.roundRect(0, 0, 90, 32, 8).fill(0x1a1a2e);
@@ -230,8 +238,7 @@ export class SlotScene extends Container {
 
       const label = new Text({ text: `${val}`, style: new TextStyle({ fontSize: 16, fill: 0xe67e22, fontFamily: 'monospace' }) });
       label.anchor.set(0.5);
-      label.x = 45;
-      label.y = 16;
+      label.x = 45; label.y = 16;
       btn.addChild(label);
 
       btn.eventMode = 'static';
@@ -278,7 +285,6 @@ export class SlotScene extends Container {
     const cells = this.symbolCells[col];
     const spinCount = 12 + col * 4;
     let current = 0;
-
     const tick = () => {
       if (current < spinCount) {
         cells.forEach(cell => {
@@ -312,7 +318,7 @@ export class SlotScene extends Container {
 
     this._refreshHUD();
 
-    if (GameState.coins >= GameState.startCoins * 3) {
+    if (GameState.coins >= GameState.getFloorTarget()) {
       setTimeout(() => this.onFloorComplete(), 800);
       return;
     }
