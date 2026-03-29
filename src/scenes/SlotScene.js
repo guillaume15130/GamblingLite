@@ -100,19 +100,20 @@ export class SlotScene extends Container {
     this.winText.y = 160;
     this.addChild(this.winText);
 
+    // Bet label — placed below the bet buttons (buttons end at y=622)
     const betLabel = new Text({ text: 'MISE :', style: new TextStyle({ fontSize: 16, fill: 0x7f8c8d, fontFamily: 'monospace' }) });
     betLabel.x = 30;
-    betLabel.y = 610;
+    betLabel.y = 638;
     this.addChild(betLabel);
 
     this.betText = new Text({ text: '', style: new TextStyle({ fontSize: 22, fill: 0xe67e22, fontFamily: 'monospace', fontWeight: 'bold' }) });
     this.betText.x = 100;
-    this.betText.y = 608;
+    this.betText.y = 634;
     this.addChild(this.betText);
 
     this.relicContainer = new Container();
     this.relicContainer.x = 30;
-    this.relicContainer.y = 650;
+    this.relicContainer.y = 668;
     this.addChild(this.relicContainer);
 
     this._refreshHUD();
